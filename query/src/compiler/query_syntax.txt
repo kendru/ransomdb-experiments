@@ -1,0 +1,87 @@
+query = select_query .
+
+select_query =
+    "SELECT" ["ALL"|"DISTINCT"] result_columns [FROM table_refs] [";"].
+
+result_columns = result_column ["," result_columns] .
+
+result_column =
+      "*"
+    | table_name "." "*"
+    | expr "AS" IDENT
+    | expr IDENT
+    | expr .
+
+expr =
+      "+" expr expr'
+    | "-" expr expr'
+    | "~" expr expr'
+    | "NOT" expr expr'
+    | "(" expr ")" expr'
+    | literal_val expr'
+    | column_ref expr' .
+
+expr' =
+      "AND" expr expr'
+    | "OR" expr expr'
+    | "||" expr expr'
+    | "*" expr expr'
+    | "/" expr expr'
+    | "%" expr expr'
+    | "+" expr expr'
+    | "-" expr expr'
+    | "<" expr expr'
+    | "<=" expr expr'
+    | ">" expr expr'
+    | ">=" expr expr'
+    | "=" expr expr'
+    | "<>" expr expr'
+    | "IS" expr expr'
+    | "IS NOT" expr expr'
+    | "LIKE" expr expr'
+    | "LIKE" expr expr'
+    | ε .
+
+literal_val =
+      INT
+    | DECIMAL
+    | STRING
+    | BOOLEAN
+    | NULL .
+
+column_ref =
+      table_name "." column_name
+    | column_name .
+
+table_refs = table_ref ["," table_ref] .
+
+table_ref =
+      materialized_table
+    | joined_table .
+
+joined_table =
+    materialized_table joined_table'
+
+joined_table' =
+      ["INNER" | "CROSS"] "JOIN" materialized_table [join_constraint]
+    | {"LEFT"|"RIGHT"} ["OUTER"] "JOIN" table_ref join_constraint
+    | "NATURAL" ["INNER" | {"LEFT"|"RIGHT} ["OUTER"]] "JOIN" materialized_table
+    | ε .
+
+join_constraint =
+      "USING" "(" idents ")"
+    | "ON" expr .
+
+idents =
+      ident "," idents
+    | ident .
+
+materialized_table =
+      "(" select_query ")" "AS" ident
+    | "(" select_query ")" ident
+    | "(" select_query ")"
+    | table_name "AS" ident
+    | table_name .
+
+table_name = IDENT .
+column_name = IDENT .
